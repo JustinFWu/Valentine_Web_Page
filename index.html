@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Angie Angie</title>
+
+
+    <link rel="stylesheet" href="./js_functions/default.css" />
+
+    <!-- Libraries (kept because your animation depends on them) -->
+    <script src="./js_functions/jquery.min.js"></script>
+    <script src="./js_functions/jscex.min.js"></script>
+    <script src="./js_functions/jscex-parser.js"></script>
+    <script src="./js_functions/jscex-jit.js"></script>
+    <script src="./js_functions/jscex-builderbase.min.js"></script>
+    <script src="./js_functions/jscex-async.min.js"></script>
+    <script src="./js_functions/jscex-async-powerpack.min.js"></script>
+
+    <!-- Your project scripts (Tree, seed, typewriter, timeElapse, etc.) -->
+    <script src="./js_functions/functions.js"></script>
+    <script src="./js_functions/love.js"></script>
+
+    <style>
+        .STYLE1 {
+            color: #666;
+        }
+
+        /* optional: show pointer when seed is hoverable */
+        #canvas.hand {
+            cursor: pointer;
+        }
+
+        /* basic fallback if CSS missing */
+        #error {
+            display: none;
+            margin: 16px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #fff6f6;
+        }
+
+        #choice-box {
+            position: absolute;
+            left: 60px;
+            top: 400px;
+            font-size: 28px;
+            display: none;
+            width: 550px;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            z-index: 10;
+            height: 140px;    
+        }
+
+        #choice-box button {
+            font-size: 20px;
+            padding: 10px 18px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            background: #fff;
+        }
+
+        #noBtn {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+
+        #yesBtn {
+            position: absolute;
+            /* so it can move */
+            left: 50%;
+            top: 50%;
+            transform: none;
+            cursor: pointer;
+        }
+
+        .big-love {
+            font-size: 40px !important;
+            font-weight: 700;
+            display: inline-block;
+            margin-top: 12px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="main">
+
+        <div id="wrap">
+            <div id="text">
+                <div id="code" style="display:none;">
+                    <span class="say">Hi Angie Angie</span><br />
+                    <span class="say">Meeting you is one of the best things that has happened in my life.</span><br />
+                    <span class="say">And lowkey, I feel like I have exchanged all my luck in my next life to spend this
+                        life with you, and that is totally fine.</span><br />
+                    <span class="say">I hope you are going to select yes. Otherwise I sad sad.</span>
+                </div>
+            </div>
+
+            <div id="choice-box" style="display:none;">
+                <button id="yesBtn" type="button">Yesss</button>
+                <button id="noBtn" type="button" aria-disabled="true" title="I sad sad now :\">No</button>
+            </div>
+
+            <div id="clock-box" style="display:none;">
+                <span class="STYLE1">Will you be my Valientine?</span>
+            </div>
+
+            <canvas id="canvas" width="1100" height="680"></canvas>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        (function () {
+            var canvas = $('#canvas');
+
+            if (!canvas[0] || !canvas[0].getContext) {
+                $("#error").show();
+                return false;
+            }
+
+            var width = canvas.width();
+            var height = canvas.height();
+            canvas.attr("width", width);
+            canvas.attr("height", height);
+
+            // IMPORTANT: replace this with your real opts object
+            var opts = {
+                seed: { x: width / 2 - 20, color: "rgb(190, 26, 37)", scale: 2 },
+                branch: [[535, 680, 570, 250, 500, 200, 30, 100, [
+                    [540, 500, 455, 417, 340, 400, 13, 100, [
+                        [450, 435, 434, 430, 394, 395, 2, 40]
+                    ]],
+                    [550, 445, 600, 356, 680, 345, 12, 100, [
+                        [578, 400, 648, 409, 661, 426, 3, 80]
+                    ]],
+                    [539, 281, 537, 248, 534, 217, 3, 40],
+                    [546, 397, 413, 247, 328, 244, 9, 80, [
+                        [427, 286, 383, 253, 371, 205, 2, 40],
+                        [498, 345, 435, 315, 395, 330, 4, 60]
+                    ]],
+                    [546, 357, 608, 252, 678, 221, 6, 100, [
+                        [590, 293, 646, 277, 648, 271, 2, 80]
+                    ]]
+                ]]],
+                bloom: { num: 700, width: 1080, height: 650 },
+                footer: { width: 1200, height: 5, speed: 10 }
+            };
+
+            var tree = new Tree(canvas[0], width, height, opts);
+            var seed = tree.seed;
+            var foot = tree.footer;
+            var hold = 1;
+
+            canvas.click(function (e) {
+                var offset = canvas.offset(), x, y;
+                x = e.pageX - offset.left;
+                y = e.pageY - offset.top;
+
+                if (seed.hover(x, y)) {
+                    hold = 0;
+                    canvas.unbind("click");
+                    canvas.unbind("mousemove");
+                    canvas.removeClass('hand');
+
+                    // Help autoplay restrictions (optional)
+                    var bgm = document.getElementById("bgm");
+                    if (bgm) { try { bgm.play(); } catch (err) { } }
+                }
+            }).mousemove(function (e) {
+                var offset = canvas.offset(), x, y;
+                x = e.pageX - offset.left;
+                y = e.pageY - offset.top;
+                canvas.toggleClass('hand', seed.hover(x, y));
+            });
+
+            function initChoiceButtons() {
+                var box = document.getElementById("choice-box");
+                var yes = document.getElementById("yesBtn");
+                var no = document.getElementById("noBtn");
+
+                if (!box || !yes || !no) return;
+
+                // --- NO button: fake (cannot be clicked) + optional "dodge"
+                no.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+
+                // Optional: make NO dodge when you try to hover it
+                no.addEventListener("mouseenter", function () {
+                    // small random nudge (stays within box)
+                    var rect = box.getBoundingClientRect();
+                    var nx = Math.random() * (rect.width - no.offsetWidth);
+                    var ny = Math.random() * (rect.height - no.offsetHeight);
+                    no.style.position = "absolute";
+                    no.style.left = nx + "px";
+                    no.style.top = ny + "px";
+                });
+
+                // --- YES button: smoothly follows the mouse inside the box
+                var targetX = null, targetY = null;
+                var curX = yes.offsetLeft, curY = yes.offsetTop;
+
+                box.addEventListener("mousemove", function (e) {
+                    var rect = box.getBoundingClientRect();
+                    // target position centered on cursor
+                    targetX = (e.clientX - rect.left) - (yes.offsetWidth / 2);
+                    targetY = (e.clientY - rect.top) - (yes.offsetHeight / 2);
+
+                    // clamp inside the box
+                    if (targetX < 0) targetX = 0;
+                    if (targetY < 0) targetY = 0;
+                    if (targetX > rect.width - yes.offsetWidth) targetX = rect.width - yes.offsetWidth;
+                    if (targetY > rect.height - yes.offsetHeight) targetY = rect.height - yes.offsetHeight;
+                });
+
+                function animateFollow() {
+                    if (targetX !== null) {
+                        // smoothing (0.12 = how fast it follows)
+                        curX += (targetX - curX) * 0.12;
+                        curY += (targetY - curY) * 0.12;
+                        yes.style.left = curX + "px";
+                        yes.style.top = curY + "px";
+                    }
+                    requestAnimationFrame(animateFollow);
+                }
+                requestAnimationFrame(animateFollow);
+
+                // --- YES click: do something (works on GitHub Pages)
+                yes.addEventListener("click", function () {
+                    // Example: show an alert + open mailto (static-safe)
+                    alert("YAYYY 💖  (please inform your boyfriend of your fabulous choice)");
+                });
+            }
+
+            var seedAnimate = eval(Jscex.compile("async", function () {
+                seed.draw();
+                while (hold) {
+                    $await(Jscex.Async.sleep(10));
+                }
+                while (seed.canScale()) {
+                    seed.scale(0.95);
+                    $await(Jscex.Async.sleep(10));
+                }
+                while (seed.canMove()) {
+                    seed.move(0, 2);
+                    foot.draw();
+                    $await(Jscex.Async.sleep(10));
+                }
+            }));
+
+            var growAnimate = eval(Jscex.compile("async", function () {
+                do {
+                    tree.grow();
+                    $await(Jscex.Async.sleep(10));
+                } while (tree.canGrow());
+            }));
+
+            var flowAnimate = eval(Jscex.compile("async", function () {
+                do {
+                    tree.flower(2);
+                    $await(Jscex.Async.sleep(10));
+                } while (tree.canFlower());
+            }));
+
+            var moveAnimate = eval(Jscex.compile("async", function () {
+                tree.snapshot("p1", 240, 0, 610, 680);
+                while (tree.move("p1", 500, 0)) {
+                    foot.draw();
+                    $await(Jscex.Async.sleep(10));
+                }
+                foot.draw();
+                tree.snapshot("p2", 500, 0, 610, 680);
+
+                // Avoid flicker by setting background snapshot
+                canvas.parent().css("background", "url(" + tree.toDataURL("image/png") + ")");
+                canvas.css("background", "#ffe");
+                $await(Jscex.Async.sleep(300));
+                canvas.css("background", "none");
+            }));
+
+            var jumpAnimate = eval(Jscex.compile("async", function () {
+                while (true) {
+                    tree.ctx.clearRect(0, 0, width, height);
+                    tree.jump();
+                    foot.draw();
+                    $await(Jscex.Async.sleep(25));
+                }
+            }));
+
+            var textAnimate = eval(Jscex.compile("async", function () {
+                var together = new Date();
+                together.setFullYear(2017, 0, 1); // Jan = 0
+                together.setHours(0, 0, 0, 0);
+
+                $("#code").show().typewriter();
+                $("#clock-box").fadeIn(500);
+                $("#choice-box").fadeIn(500);
+                initChoiceButtons();
+
+                while (true) {
+                    timeElapse(together);
+                    $await(Jscex.Async.sleep(1000));
+                }
+            }));
+
+            var runAsync = eval(Jscex.compile("async", function () {
+                $await(seedAnimate());
+                $await(growAnimate());
+                $await(flowAnimate());
+                $await(moveAnimate());
+
+                textAnimate().start();
+                $await(jumpAnimate());
+            }));
+
+            runAsync().start();
+        })();
+    </script>
+
+</body>
+
+</html>
